@@ -1,0 +1,15 @@
+numpy
+matplotlib
+pydicom
+pandas
+ipykernel
+scikit-image
+scipy
+torch
+torchvision
+torchio
+onnx
+streamlit
+fastapi
+uvicorn
+python-multipart

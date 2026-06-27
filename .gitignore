@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+lungcancer/
+.conda/
+
+# Data files (too large for GitHub)
+data/raw/*.dcm
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# ONNX model (large file)
+outputs/*.onnx
