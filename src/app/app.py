@@ -29,9 +29,9 @@ with st.sidebar:
     threshold = st.slider(
         "Detection Threshold",
         min_value=0.1,
-        max_value=0.9,
-        value=0.5,
-        step=0.1,
+        max_value=0.3,
+        value=0.1,
+        step=0.01,
         help="Higher threshold = fewer but more confident detections"
     )
     st.divider()
@@ -46,17 +46,27 @@ uploaded_file = st.file_uploader(
     type=['dcm'],
     help="Upload a chest CT scan in DICOM format"
 )
+@st.cache_data
+def run_catched_pipeline(file_bytes,threshold):
+    """Cache pipeline results so same file+threshold doesn't reprocess"""
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.dcm') as tmp_file:
+        tmp_file.write(file_bytes)
+        tmp_path=tmp_file.name
+    try:
+        candidates_df,warnings=run_full_pipeline(tmp_path,threshold)
+        return candidates_df,warnings,tmp_path
+    except Exception as e:
+        os.unlink(tmp_path)
+        raise e
 
 if uploaded_file is not None:
-    # Save uploaded file to temp location
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.dcm') as tmp_file:
-        tmp_file.write(uploaded_file.getvalue())
-        tmp_path = tmp_file.name
+    
+    
     
     # Run pipeline with caching
     with st.spinner("🔄 Processing CT scan... please wait"):
         try:
-            candidates_df, warnings = run_full_pipeline(tmp_path)
+            candidates_df, warnings, tmp_path = run_catched_pipeline(uploaded_file.getvalue(),threshold)
             st.success("✅ Pipeline complete!")
         except Exception as e:
             st.error(f"❌ Pipeline failed: {str(e)}")

@@ -95,7 +95,7 @@ def segment_lungs(hu_image, warnings):
     return lung_mask
 
 # ── Step 4: Find Candidates ──────────────────────────────────
-def find_candidates(hu_image, lung_mask):
+def find_candidates(hu_image, lung_mask, threshold=0.5):
     """Find nodule candidates using fill-holes method"""
     filled_lung = ndimage.binary_fill_holes(lung_mask)
     candidate_mask = filled_lung.astype(int) - lung_mask.astype(int)
@@ -106,17 +106,23 @@ def find_candidates(hu_image, lung_mask):
     for region in regions:
         if region.area < 5 or region.area > 1000:
             continue
+        confidence = (region.mean_intensity + 400)/800
+        confidence = max(0.0, min(1.0,confidence))
+        
+        if confidence<threshold:
+            continue
         y, x = region.centroid
         candidates.append({
             'x': x, 'y': y,
             'area': region.area,
-            'mean_intensity': region.mean_intensity
+            'mean_intensity': region.mean_intensity,
+            'confidence':confidence
         })
     
     return pd.DataFrame(candidates,
-                       columns=['x','y','area','mean_intensity']) \
+                       columns=['x','y','area','mean_intensity','confidence']) \
            if candidates else pd.DataFrame(
-               columns=['x','y','area','mean_intensity'])
+               columns=['x','y','area','mean_intensity','confidence'])
 
 # ── Step 5: Generate Report ──────────────────────────────────
 def generate_report(dicom_path, hu_image, lung_mask,
@@ -163,7 +169,7 @@ def generate_report(dicom_path, hu_image, lung_mask,
     return csv_path, img_path
 
 # ── Main Pipeline ────────────────────────────────────────────
-def run_full_pipeline(dicom_path):
+def run_full_pipeline(dicom_path, threshold=0.5):
     """
     Complete end-to-end pipeline
     Returns: (candidates_df, report_paths, warnings)
@@ -190,7 +196,7 @@ def run_full_pipeline(dicom_path):
     
     # Step 4
     print("\n[4/5] Finding nodule candidates...")
-    candidates_df = find_candidates(hu_image, lung_mask)
+    candidates_df = find_candidates(hu_image, lung_mask, threshold)
     print(f"      Candidates: {len(candidates_df)}")
     
     # Step 5
@@ -204,4 +210,5 @@ def run_full_pipeline(dicom_path):
 
 # ── Run ──────────────────────────────────────────────────────
 if __name__ == "__main__":
-    candidates, warnings = run_full_pipeline('data/raw/sample.dcm')
+    candidates, warnings = run_full_pipeline('data/raw/sample.dcm', threshold=0.05)
+    print(candidates[['x', 'y', 'confidence']])
