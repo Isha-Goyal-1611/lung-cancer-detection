@@ -7,6 +7,7 @@ import pandas as pd
 import tempfile
 import os
 import sys
+import io
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from full_pipeline import run_full_pipeline
@@ -56,7 +57,6 @@ def run_catched_pipeline(file_bytes,threshold):
         candidates_df,warnings=run_full_pipeline(tmp_path,threshold)
         return candidates_df,warnings,tmp_path
     except Exception as e:
-        os.unlink(tmp_path)
         raise e
 
 if uploaded_file is not None:
@@ -78,7 +78,7 @@ if uploaded_file is not None:
             st.warning(f"⚠️ {w}")
     
     # Load DICOM for display
-    ds = pydicom.dcmread(tmp_path, force=True)
+    ds = pydicom.dcmread(io.BytesIO(uploaded_file.getvalue()), force=True)
     pixel_array = ds.pixel_array
     slope = float(ds.RescaleSlope)
     intercept = float(ds.RescaleIntercept)
