@@ -7,7 +7,8 @@ import pandas as pd
 import tempfile
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from full_pipeline import run_full_pipeline
 
 # ── Page Config ──────────────────────────────────────────────
