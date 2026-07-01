@@ -179,7 +179,11 @@ if uploaded_file is not None:
                  str(ds.get('Manufacturer', 'N/A')))
     
     # Cleanup temp file
-    os.unlink(tmp_path)
+    try:
+      os.unlink(tmp_path)
+
+    except(FileNotFoundError, TypeError):
+        pass
 
 else:
     # Show instructions when no file uploaded
